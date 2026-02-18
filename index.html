@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nekobyran的小屋</title>
+  <meta name="color-scheme" content="light" />
+
+  <style>
+    :root{
+      /* Default_Light */
+      --text: #181B25;
+      --subtext: #434654;
+      --primary: #0054D6;
+
+      /* 高透明玻璃（但别糊） */
+      --glass: rgba(255,255,255,.08);
+      --glass2: rgba(255,255,255,.06);
+      --stroke: rgba(24,27,37,.16);
+      --strokeHover: rgba(0,84,214,.22);
+
+      --shadow2: 0 10px 26px rgba(24,27,37,.08);
+
+      --r-xl: 22px;
+      --r-lg: 18px;
+      --r-md: 14px;
+
+      /* 右侧窄栏宽度 */
+      --rail-w: 88px;
+      --gap: 14px;
+
+      /* 关键：模糊减轻（原来 16px 太重） */
+      --blur: 5px;
+
+      --heroBg: rgba(255,255,255,.10);
+      --sectionBg: rgba(255,255,255,.08);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
+                   "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text);
+      overflow-x:hidden;
+      background:#FAF8FF;
+    }
+
+    /* 背景：不模糊 */
+    .bg{
+      position:fixed;
+      inset:0;
+      z-index:-5;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(0,84,214,.10), transparent 60%),
+        radial-gradient(1000px 600px at 85% 25%, rgba(0,84,214,.07), transparent 60%),
+        url("https://image.acg.lol/file/2026/01/31/1000242264.jpg");
+      background-size: cover;
+      background-position:center;
+    }
+
+    /* 布局：右侧预留窄栏 */
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 22px 18px 40px;
+    }
+    .content{
+      padding-right: calc(var(--rail-w) + var(--gap));
+    }
+
+    /* 标题卡：不跟随滚动（不 sticky） */
+    .hero{
+      padding: 16px 18px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--r-xl);
+      background: var(--heroBg);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(var(--blur)) saturate(1.04);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(1.04);
+
+      /* 载入入场 */
+      opacity: 0;
+      transform: translateY(10px);
+      animation: enterHero .55s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    @keyframes enterHero{
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size: 20px;
+      letter-spacing:.3px;
+      line-height:1.2;
+    }
+    .desc{
+      margin:0;
+      color: var(--subtext);
+      font-size: 13.2px;
+      line-height: 1.65;
+    }
+
+    /* 主区块 */
+    .section{
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-radius: var(--r-xl);
+      border: 1px solid var(--stroke);
+      background: var(--sectionBg);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(var(--blur)) saturate(1.04);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(1.04);
+
+      /* 载入入场 */
+      opacity: 0;
+      transform: translateY(12px);
+      animation: enterSection .6s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: .10s;
+    }
+    @keyframes enterSection{
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    .section h2{
+      margin: 0 0 10px;
+      font-size: 15px;
+      letter-spacing:.2px;
+    }
+    .section p{
+      margin: 0 0 12px;
+      color: var(--subtext);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* 项目列表 */
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+
+    /* 项目卡片：高透明 + 轻磨砂 */
+    .item{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--stroke);
+      background: var(--glass);
+      text-decoration:none;
+      color: var(--text);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(calc(var(--blur) - 2px)) saturate(1.04);
+      -webkit-backdrop-filter: blur(calc(var(--blur) - 2px)) saturate(1.04);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+      position:relative;
+      overflow:hidden;
+
+      /* 载入时：入场动画由 JS 逐个加 class */
+      opacity: 0;
+      transform: translateY(16px) scale(.985);
+    }
+
+    /* 玻璃高光层（更淡，避免“糊”） */
+    .item::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      background: linear-gradient(180deg, rgba(255,255,255,.16), transparent 82%);
+      opacity:.35;
+      pointer-events:none;
+    }
+    .item > *{ position:relative; }
+
+    .item:hover{
+      transform: translateY(-1px);
+      border-color: var(--strokeHover);
+      background: var(--glass2);
+    }
+    .item:active{ transform: translateY(0px) scale(.995); }
+
+    .icon{
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: rgba(0,84,214,.07);
+      border: 1px solid rgba(0,84,214,.14);
+      display:grid;
+      place-items:center;
+      flex: 0 0 auto;
+      overflow:hidden;
+    }
+    .icon img{ width: 70%; height: 70%; object-fit: contain; }
+
+    .meta{ flex:1; min-width:0; }
+    .name{
+      font-weight: 760;
+      font-size: 14px;
+      line-height:1.2;
+      margin:0 0 4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .sub{
+      margin:0;
+      color: var(--subtext);
+      font-size: 12.5px;
+      line-height:1.35;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .arrow{
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      border: 1px solid rgba(24,27,37,.10);
+      background: rgba(255,255,255,.08);
+      flex: 0 0 auto;
+      backdrop-filter: blur(calc(var(--blur) - 2px));
+      -webkit-backdrop-filter: blur(calc(var(--blur) - 2px));
+    }
+    .arrow svg{ opacity:.75; }
+
+    /* 入场动画：更明显、更干净 */
+    .item.enter{
+      animation: enterItem .52s cubic-bezier(.2,.85,.2,1) forwards;
+    }
+    @keyframes enterItem{
+      to{ opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    /* 右侧超窄竖栏：图标上 + 文字下（单列） */
+    .rail{
+      position: fixed;
+      top: 18px;
+      right: 12px;
+      width: var(--rail-w);
+      z-index: 20;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding: 10px 8px;
+
+      border-radius: 999px;
+      border: 1px solid rgba(24,27,37,.14);
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(var(--blur)) saturate(1.08);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(1.08);
+      box-shadow: var(--shadow2);
+
+      /* 入场 */
+      opacity: 0;
+      transform: translateY(10px);
+      animation: enterRail .55s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: .15s;
+    }
+    @keyframes enterRail{
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    .railItem{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-decoration:none;
+      color: var(--text);
+      gap: 6px;
+      padding: 10px 6px;
+      border-radius: 18px;
+      border: 1px solid rgba(24,27,37,.12);
+      background: rgba(255,255,255,.06);
+      transition: transform .14s ease, border-color .14s ease, background .14s ease;
+    }
+    .railItem:hover{
+      transform: translateY(-1px);
+      border-color: rgba(0,84,214,.22);
+      background: rgba(255,255,255,.05);
+    }
+    .railIcon{
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      border: 1px solid rgba(0,84,214,.14);
+      background: rgba(0,84,214,.07);
+      overflow:hidden;
+    }
+    .railIcon img{ width: 70%; height: 70%; object-fit: contain; }
+    .railText{
+      font-size: 11.5px;
+      color: var(--subtext);
+      line-height: 1.1;
+      text-align:center;
+      max-width: 70px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* 小屏处理：右侧栏变底部一排 */
+    @media (max-width: 980px){
+      .content{ padding-right: 0; }
+      .rail{
+        top:auto;
+        bottom: 18px;
+        left: 12px;
+        right: 12px;
+        width:auto;
+        flex-direction:row;
+        justify-content:space-around;
+      }
+      .wrap{ padding-bottom: 120px; }
+      .railItem{ flex:1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg" aria-hidden="true"></div>
+
+  <!-- 右侧窄栏 -->
+  <nav class="rail" aria-label="快捷入口">
+    <a class="railItem" href="https://qun.qq.com/universal-share/share?ac=1&authKey=Z2n%2B%2BnzVUkO7Zi8B1T0DtlZVJqlQJAqRRjfu6KmU2waVx4RUmJ1aglBcnV/dGFwa&busi_data=eyJncm91cENvZGUiOiIxMDMyNTUwOTcyIiwidG9rZW4iOiJiVnF5SDJWaDFYQlBvcTdqc2pvNThXQk9mM01LOVhvZWozcHZzOEtVV29QUHpCZE1PeXZ1SzFxVDVqL1lZM1M3IiwidWluIjoiMzUyODIyMDc3OSJ9&data=CpoB-HZLl0FLBKzghbzO0vRWn0TQv2g79xzPfVgTZQxTgGddpk7FGXzi_HaPg-LPkNAcvdkqq0Vof5OJ8vkV47mz_XkD59u04EltqcNAmq8&svctype=5&tempid=h5_group_info" target="_blank" rel="noopener">
+      <span class="railIcon"><img alt="QQ群" src="https://image.acg.lol/file/2026/01/31/1000242287.png"></span>
+      <span class="railText">QQ群</span>
+    </a>
+
+    <a class="railItem" href="https://pd.qq.com/qqweb/qunpro/share?_wv=3&_wwv=128&appChannel=share&attaContentID=718fe7d13b664c2685846086c2d4a705&biz=ka&businessType=5&from=246611&inviteCode=2w1uTuRyhbS&mainSourceId=qr_code&subSourceId=pic4&b=5" target="_blank" rel="noopener">
+      <span class="railIcon"><img alt="TG" src="https://image.acg.lol/file/2026/01/31/1000242287.png"></span>
+      <span class="railText">QQ社区</span>
+    </a>
+
+    <a class="railItem" href="http://t.me/nekobyran" target="_blank" rel="noopener">
+      <span class="railIcon"><img alt="Web" src="https://image.acg.lol/file/2026/02/11/1000136943.jpg"></span>
+      <span class="railText">Telegram</span>
+    </a>
+    
+        <a class="railItem" href="https://space.bilibili.com/3546887437158888" target="_blank" rel="noopener">
+      <span class="railIcon"><img alt="Web" src="https://image.acg.lol/file/2026/02/01/1000242291.png"></span>
+      <span class="railText">bilibili</span>
+    </a>
+  </nav>
+
+  <div class="wrap">
+    <div class="content">
+      <header class="hero">
+        <h1>Nekobyran的小屋</h1>
+        <p class="desc">
+          见你未见，得你未得
+        </p>
+      </header>
+
+      <main class="section">
+        <h2>项目列表</h2>
+        <p>我发布的项目</p>
+
+        <div class="list" id="projectList">
+          <a class="item" href="https://nekobyran.lanzouw.com/s/nekobyran" target="_blank" rel="noopener">
+            <div class="icon"><img alt="Download" src="https://image.acg.lol/file/2026/01/31/1000241144.png"></div>
+            <div class="meta">
+              <p class="name">猫Star</p>
+              <p class="sub">实用资源工具软件(长期开发中)</p>
+            </div>
+            <div class="arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="rgba(24,27,37,.78)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+
+          <a class="item" href="https://nekobyran.lanzouw.com/s/allrjk" target="_blank" rel="noopener">
+            <div class="icon"><img alt="Log" src="https://image.acg.lol/file/2026/02/01/1000242292.jpg"></div>
+            <div class="meta">
+              <p class="name">软件库²</p>
+              <p class="sub">小合集软件，内部软件远程更新</p>
+            </div>
+            <div class="arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="rgba(24,27,37,.78)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+          
+      <a class="item" href="https://nekobyran.lanzouw.com/b00yawz2bg" target="_blank" rel="noopener">
+            <div class="icon"><img alt="Log" src="https://image.acg.lol/file/2026/02/11/1000245586.jpg"></div>
+            <div class="meta">
+              <p class="name">Lanzouplus</p>
+              <p class="sub">长期开发中</p>
+            </div>
+            <div class="arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="rgba(24,27,37,.78)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+          
+          <a class="item" href="https://www.nkbr.cc" target="_blank" rel="noopener">
+            <div class="icon"><img alt="Docs" src="https://image.acg.lol/file/2026/01/31/1000213947.png"></div>
+            <div class="meta">
+              <p class="name">暂无更多项目</p>
+              <p class="sub">时间改变一切</p>
+            </div>
+            <div class="arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="rgba(24,27,37,.78)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    /* ========= 页面载入时：项目逐个入场 ========= */
+    window.addEventListener("load", () => {
+      const items = Array.from(document.querySelectorAll(".item"));
+      items.forEach((el, i) => {
+        const delay = 120 + i * 90; // 更明显的节奏
+        setTimeout(() => el.classList.add("enter"), delay);
+      });
+    });
+  </script>
+</body>
+</html>
